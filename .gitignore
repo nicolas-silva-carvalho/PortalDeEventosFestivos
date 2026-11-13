@@ -1,0 +1,22 @@
+# Node / React
+node_modules/
+dist/
+build/
+.env
+.env.local
+
+# Java / Spring Boot / Maven / Gradle
+target/
+.gradle/
+build/
+*.jar
+*.war
+application-local.properties
+application-prod.properties
+
+# IDEs e Sistema
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
