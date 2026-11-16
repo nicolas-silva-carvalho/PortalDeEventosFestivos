@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { FestividadeSwitcher } from "@/features/festividades/abas/festividade-switcher";
 import { HomeHero } from "@/components/home/home-hero";
+import Footer from "@/components/footer/footer";
 import {
   useDadosGlobais,
   useUltimaConferencia,
@@ -56,6 +57,7 @@ export default function Home() {
       />
 
       <FestividadeSwitcher />
+      <Footer />
     </div>
   );
 }

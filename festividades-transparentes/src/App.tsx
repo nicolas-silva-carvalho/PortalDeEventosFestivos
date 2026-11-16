@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Navbar from "@/components/navbar/navbar";
-import Footer from "@/components/footer/footer";
+
 import Home from "@/pages/Home";
 import Legislacao from "@/pages/Legislacao";
 import Sobre from "@/pages/Sobre";
@@ -22,7 +22,6 @@ export default function App() {
               </Routes>
             </AsyncBoundary>
         </main>
-        <Footer />
       </div>
     </Router>
   );
