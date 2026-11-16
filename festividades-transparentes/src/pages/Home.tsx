@@ -45,9 +45,7 @@ export default function Home() {
     };
   }, [totalGeral, valoresPorMunicipio, rankingContratacoes, filtros]);
 
-  const dataVerificacao = ultimaConferencia?.dataReferencia
-    ? new Date(ultimaConferencia.dataReferencia).toLocaleDateString("pt-BR")
-    : "Não disponível";
+  const dataVerificacao = ultimaConferencia?.dataFormatada || "Não disponível";
 
   return (
     <div className="w-full min-h-screen bg-white font-sans -mt-[72px]">

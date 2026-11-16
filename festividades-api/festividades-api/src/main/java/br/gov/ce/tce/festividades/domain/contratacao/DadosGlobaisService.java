@@ -3,13 +3,12 @@ package br.gov.ce.tce.festividades.domain.contratacao;
 import br.gov.ce.tce.festividades.domain.contratacao.dto.ContratacaoFrontDTO;
 import br.gov.ce.tce.festividades.domain.contratacao.dto.DadosGlobaisDTO;
 import br.gov.ce.tce.festividades.domain.contratacao.dto.DadosGlobaisDTO.Filtros;
-import br.gov.ce.tce.festividades.domain.contratacao.dto.DadosGlobaisDTO.MunicipioAgrupado;
 import br.gov.ce.tce.festividades.domain.contratacao.dto.DadosGlobaisDTO.RankingArtista;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.text.Collator;
 import java.text.Normalizer;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -31,6 +30,7 @@ public class DadosGlobaisService {
             "Outros", "outros"
     );
 
+    @Cacheable(cacheNames = "dadosGlobais", key = "#p0 == null ? 'todos' : #p0")
     @Transactional(readOnly = true)
     public DadosGlobaisDTO montar(Integer ano) {
         List<ContratacaoFrontDTO> todas = repository.findAllComMunicipio().stream()
@@ -51,8 +51,6 @@ public class DadosGlobaisService {
         double totalGeral = 0;
         Map<String, Double> totaisPorCategoria = new LinkedHashMap<>();
         Map<String, Double> valoresPorMunicipio = new LinkedHashMap<>();
-        Collator collator = Collator.getInstance(Locale.forLanguageTag("pt-BR"));
-        Map<String, List<ContratacaoFrontDTO>> porMunicipio = new TreeMap<>(collator::compare);
         Map<String, RankingArtista> artistas = new HashMap<>();
 
         for (ContratacaoFrontDTO c : lista) {
@@ -62,7 +60,6 @@ public class DadosGlobaisService {
 
             if (c.municipio() != null) {
                 valoresPorMunicipio.merge(slugify(c.municipio()), v, Double::sum);
-                porMunicipio.computeIfAbsent(c.municipio(), k -> new ArrayList<>()).add(c);
             }
 
             if ("atracoes".equals(c.categoria()) && c.fornecedorOuArtista() != null) {
@@ -71,13 +68,6 @@ public class DadosGlobaisService {
                         (a, b) -> new RankingArtista(a.nome(), a.valor() + b.valor(), a.ocorrencias() + 1));
             }
         }
-
-        List<MunicipioAgrupado> municipios = porMunicipio.entrySet().stream()
-                .map(e -> new MunicipioAgrupado(
-                        e.getKey(),
-                        e.getValue().stream().mapToDouble(x -> nz(x.valor())).sum(),
-                        e.getValue()))
-                .toList();
 
         List<RankingArtista> rankingArtistas = artistas.values().stream()
                 .sorted(Comparator.comparing(RankingArtista::valor).reversed())
@@ -93,12 +83,17 @@ public class DadosGlobaisService {
         );
 
         return new DadosGlobaisDTO(ano, totalGeral, totaisPorCategoria, valoresPorMunicipio,
-                rankingArtistas, lista, municipios, filtros);
+                rankingArtistas, lista, filtros);
     }
 
     private ContratacaoFrontDTO paraDto(Contratacao c) {
         String tematica = c.getTematicaEvento();
-        String tipoId = TEMATICA_PARA_ID.getOrDefault(tematica == null ? "Outros" : tematica, "outros");
+
+        String eventoSlug = c.getMunicipio().getEvento();
+        String tipoId = eventoSlug != null && !eventoSlug.isBlank()
+                ? eventoSlug
+                : TEMATICA_PARA_ID.getOrDefault(tematica == null ? "Outros" : tematica, "outros");
+
         String nomeEvento = firstNonBlank(tematica, c.getNomeEventoOutros(), "Outros");
 
         Integer ano = c.getDataEvento() != null ? c.getDataEvento().getYear()
@@ -126,9 +121,9 @@ public class DadosGlobaisService {
                 c.getNumeroProcedimento(),
                 c.getFormaContratacao(),
                 c.getRazaoSocial(),
-                c.getCnpjContratada(),
+                mascararDocumento(c.getCnpjContratada()),
                 c.getRazaoSocialIntermediaria(),
-                c.getCnpjIntermediaria(),
+                mascararDocumento(c.getCnpjIntermediaria()),
                 c.getPagamentoAntecipado(),
                 c.getFonteRecursos(),
                 c.getValorTransporte(),
@@ -137,13 +132,21 @@ public class DadosGlobaisService {
                 c.getRecursosEstaduais(),
                 c.getRecursosFederais(),
                 c.getRecursosOutros(),
-                c.getStatusAuditor(),
                 c.getLinkContrato(),
                 c.getLinkProposta(),
                 c.getUrlTce(),
                 c.getUrlPncp(),
                 c.getUrlTransparencia()
         );
+    }
+
+    static String mascararDocumento(String documento) {
+        if (documento == null) return null;
+        String digitos = documento.replaceAll("\\D", "");
+        if (digitos.length() == 11) {
+            return "***." + digitos.substring(3, 6) + "." + digitos.substring(6, 9) + "-**";
+        }
+        return documento;
     }
 
     private static String normalizarCategoria(String cat) {

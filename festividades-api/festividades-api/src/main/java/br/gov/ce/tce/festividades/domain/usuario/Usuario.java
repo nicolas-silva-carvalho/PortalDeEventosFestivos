@@ -31,14 +31,16 @@ public class Usuario implements UserDetails {
     @Column(name = "\"senhaHash\"", nullable = false)
     private String senhaHash;
 
+    @Column(nullable = false)
+    private String perfil = "LEITOR";
+
     @Column(name = "\"criadoEm\"", updatable = false, insertable = false)
     private LocalDateTime criadoEm;
 
-
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        // Todo usuário criado terá a permissão padrão "ROLE_USER"
-        return List.of(new SimpleGrantedAuthority("ROLE_USER"));
+        String p = perfil == null ? "LEITOR" : perfil.trim().toUpperCase();
+        return List.of(new SimpleGrantedAuthority("ROLE_" + p));
     }
 
     @Override

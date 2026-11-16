@@ -27,11 +27,15 @@ public class DadosGlobaisController {
 
     @GetMapping("/contratacoes")
     public ResponseEntity<List<ContratacaoFrontDTO>> contratacoes(@RequestParam(required = false) Integer ano) {
-        return ResponseEntity.ok(service.montar(ano).rankingContratacoes());
+        return ResponseEntity.ok()
+                .cacheControl(CacheControl.maxAge(Duration.ofMinutes(5)).cachePublic())
+                .body(service.montar(ano).rankingContratacoes());
     }
 
     @GetMapping("/filtros")
     public ResponseEntity<DadosGlobaisDTO.Filtros> filtros() {
-        return ResponseEntity.ok(service.montar(null).filtros());
+        return ResponseEntity.ok()
+                .cacheControl(CacheControl.maxAge(Duration.ofMinutes(5)).cachePublic())
+                .body(service.montar(null).filtros());
     }
 }

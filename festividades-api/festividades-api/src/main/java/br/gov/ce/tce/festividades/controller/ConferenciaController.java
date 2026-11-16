@@ -1,9 +1,12 @@
 package br.gov.ce.tce.festividades.controller;
 
+import br.gov.ce.tce.festividades.domain.importacao.Conversores;
 import br.gov.ce.tce.festividades.domain.log.HistoricoConferencia;
 import br.gov.ce.tce.festividades.domain.log.HistoricoConferenciaRepository;
 import br.gov.ce.tce.festividades.domain.usuario.Usuario;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.CacheControl;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -13,6 +16,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 public class ConferenciaController {
@@ -25,7 +29,7 @@ public class ConferenciaController {
 
     public record NovaConferenciaDTO(String dataRealizada, String responsavel) {}
 
-    public record UltimaConferenciaDTO(String dataRealizada, String dataFormatada, String responsavel) {}
+    public record UltimaConferenciaDTO(String dataRealizada, String dataFormatada) {}
 
     public record RespostaRegistro(boolean sucesso, String mensagem, HistoricoConferencia dados) {}
 
@@ -34,10 +38,11 @@ public class ConferenciaController {
         UltimaConferenciaDTO dto = repository.findFirstByOrderByDataRealizadaDesc()
                 .map(c -> new UltimaConferenciaDTO(
                         c.getDataRealizada().atOffset(ZoneOffset.UTC).toString(),
-                        formatar(c.getDataRealizada()),
-                        c.getResponsavel()))
-                .orElse(new UltimaConferenciaDTO(null, "Pendente", null));
-        return ResponseEntity.ok(dto);
+                        formatar(c.getDataRealizada())))
+                .orElse(new UltimaConferenciaDTO(null, "Pendente"));
+        return ResponseEntity.ok()
+                .cacheControl(CacheControl.maxAge(Duration.ofMinutes(1)).cachePublic())
+                .body(dto);
     }
 
     @PostMapping("/api/conferencias")
@@ -55,6 +60,7 @@ public class ConferenciaController {
             return ResponseEntity.status(201)
                     .body(new RespostaRegistro(true, "Conferência registrada com sucesso!", c));
         } catch (Exception e) {
+            log.error("[conferencias] erro ao registrar", e);
             return ResponseEntity.status(500)
                     .body(new RespostaRegistro(false, "Erro ao registrar conferência.", null));
         }
@@ -67,7 +73,7 @@ public class ConferenciaController {
 
     private static String resolverResponsavel(NovaConferenciaDTO body, Authentication auth) {
         if (body != null && body.responsavel() != null && !body.responsavel().isBlank()) {
-            return body.responsavel();
+            return Conversores.truncar(body.responsavel().trim(), 200);
         }
         if (auth != null && auth.getPrincipal() instanceof Usuario u) return u.getNome();
         return "Auditor Sistema";

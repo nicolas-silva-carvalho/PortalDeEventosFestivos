@@ -40,7 +40,6 @@ export interface ContratoItem {
   horarioShow?: string;
   duracao?: string;
   cnpjContratada?: string;
-  cnpjBeneficiario?: string;
   linkContrato?: string;
   linkProposta?: string;
   urlTce?: string;
@@ -180,7 +179,7 @@ export function ModalDetalhesContrato({
   const nomeEvento = item.festividade || item.nomeEvento || "Evento";
   const corEvento = getCorEvento(nomeEvento);
 
-  const cnpjExibido = item.cnpjContratada || item.cnpjBeneficiario;
+  const cnpjExibido = item.cnpjContratada;
 
   return (
     <>

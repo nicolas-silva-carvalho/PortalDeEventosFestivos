@@ -3,6 +3,11 @@ import { z } from "zod";
 const texto = z.string().nullish();
 const dinheiro = z.number().nullish();
 
+const link = z
+  .string()
+  .nullish()
+  .transform((v) => (v && /^https?:\/\//i.test(v.trim()) ? v.trim() : null));
+
 export const ContratacaoSchema = z.object({
   id: z.string(),
   municipio: z.string(),
@@ -32,7 +37,6 @@ export const ContratacaoSchema = z.object({
   cnpjIntermediaria: texto,
   pagamentoAntecipado: texto,
   fonteRecursos: texto,
-  statusAuditor: texto,
 
   valorTransporte: dinheiro,
   valorCarnaval: dinheiro,
@@ -41,11 +45,11 @@ export const ContratacaoSchema = z.object({
   recursosFederais: dinheiro,
   recursosOutros: dinheiro,
 
-  linkContrato: texto,
-  linkProposta: texto,
-  urlTce: texto,
-  urlPncp: texto,
-  urlTransparencia: texto,
+  linkContrato: link,
+  linkProposta: link,
+  urlTce: link,
+  urlPncp: link,
+  urlTransparencia: link,
 });
 
 export type Contratacao = z.infer<typeof ContratacaoSchema>;
@@ -68,7 +72,8 @@ export const DadosGlobaisSchema = z.object({
 });
 
 export const UltimaConferenciaSchema = z.object({
-  dataReferencia: z.string().nullish(),
+  dataRealizada: z.string().nullish(),
+  dataFormatada: z.string().nullish(),
 });
 
 export type DadosGlobais = z.infer<typeof DadosGlobaisSchema>;

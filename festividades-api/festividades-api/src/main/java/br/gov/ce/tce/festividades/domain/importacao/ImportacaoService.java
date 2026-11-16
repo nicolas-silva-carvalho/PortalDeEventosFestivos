@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.multipart.MultipartFile;
@@ -57,6 +58,7 @@ public class ImportacaoService {
     private record Leitura(Map<String, Grupo> grupos, List<String> abasIgnoradas) {
     }
 
+    @CacheEvict(cacheNames = "dadosGlobais", allEntries = true)
     public ImportacaoResultado processar(MultipartFile arquivo, String email, String ip, String userAgent) {
         String nomeArquivo = arquivo.getOriginalFilename() != null ? arquivo.getOriginalFilename() : "";
         int anoUpload = Conversores.anoDoNomeArquivo(nomeArquivo);

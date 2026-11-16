@@ -70,6 +70,15 @@ interface MapViewProps {
   onCityClick?: (nomeMunicipio: string) => void;
 }
 
+function escaparHtml(texto: string): string {
+  return texto
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 function nomeMunicipio(feature: any): string {
   return feature?.properties?.name || feature?.properties?.NOME || feature?.properties?.nome || "";
 }
@@ -100,11 +109,11 @@ export default function MapView({ geoData, valoresPorMunicipio, escala, municipi
     };
   };
 
-  if (!geoData) return null;
-
   const mapKey = useMemo(() => {
     return corForte + JSON.stringify(valoresPorMunicipio) + municipioSelecionadoMapa;
   }, [corForte, valoresPorMunicipio, municipioSelecionadoMapa]);
+
+  if (!geoData) return null;
 
   return (
     <MapContainer
@@ -134,7 +143,7 @@ export default function MapView({ geoData, valoresPorMunicipio, escala, municipi
           const tooltipHtml = `
             <div style="background-color: #ffffff; border: 1px solid rgba(145, 158, 171, 0.24); box-shadow: 0px 8px 24px rgba(145, 158, 171, 0.16); border-radius: 12px; padding: 12px 16px; font-family: ui-sans-serif, system-ui, sans-serif; min-width: max-content;">
               <div style="font-size: 15px; font-weight: 800; color: ${corForte}; margin-bottom: 8px;">
-                ${nome}
+                ${escaparHtml(nome)}
               </div>
               <div style="font-size: 13px; color: #637381; display: flex; align-items: center; gap: 6px;">
                 gastou 

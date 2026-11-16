@@ -6,7 +6,6 @@ import Legislacao from "@/pages/Legislacao";
 import Sobre from "@/pages/Sobre";
 import NotFound from "@/pages/NaoEncontrada";
 import { AsyncBoundary } from "@/core/ui/async-boundary";
-import { AuthBootstrapper } from "@/components/auth-bootstrapper/auth-bootstrapper";
 
 export default function App() {
   return (
@@ -14,7 +13,6 @@ export default function App() {
       <div className="flex min-h-screen flex-col bg-background">
         <Navbar />
         <main className="flex-1">
-          <AuthBootstrapper>
             <AsyncBoundary>
               <Routes>
                 <Route path="/" element={<Home />} />
@@ -23,7 +21,6 @@ export default function App() {
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </AsyncBoundary>
-          </AuthBootstrapper>
         </main>
         <Footer />
       </div>

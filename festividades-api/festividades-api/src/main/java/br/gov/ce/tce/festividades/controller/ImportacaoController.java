@@ -112,10 +112,8 @@ public class ImportacaoController {
     }
 
     private static String obterIp(HttpServletRequest request) {
-        String forwarded = request.getHeader("X-Forwarded-For");
-        if (forwarded != null && !forwarded.isBlank()) {
-            return forwarded.split(",")[0].trim();
-        }
+        // Não confiar em X-Forwarded-For vindo do cliente (forjável). Atrás de proxy,
+        // use server.forward-headers-strategy e deixe o proxy sobrescrever o cabeçalho.
         return request.getRemoteAddr();
     }
 }

@@ -7,15 +7,13 @@ import {
 export function buscarDadosGlobais(signal?: AbortSignal): Promise<DadosGlobais> {
   return http("/api/publico/dados-globais", { 
     schema: DadosGlobaisSchema, 
-    signal,
-    auth: true
+    signal
   });
 }
 
 export function buscarUltimaConferencia(signal?: AbortSignal): Promise<UltimaConferencia> {
   return http("/api/publico/ultima-conferencia", { 
     schema: UltimaConferenciaSchema, 
-    signal,
-    auth: true
+    signal
   });
 }

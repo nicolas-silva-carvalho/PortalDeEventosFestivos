@@ -35,7 +35,6 @@ public record ContratacaoFrontDTO(
         Double recursosEstaduais,
         Double recursosFederais,
         Double recursosOutros,
-        String statusAuditor,
         String linkContrato,
         String linkProposta,
         String urlTce,

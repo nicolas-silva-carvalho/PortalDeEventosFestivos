@@ -16,6 +16,8 @@ import java.io.IOException;
 @Component
 public class SecurityFilter extends OncePerRequestFilter {
 
+    private static final String PREFIXO = "Bearer ";
+
     @Autowired
     private TokenService tokenService;
 
@@ -27,21 +29,23 @@ public class SecurityFilter extends OncePerRequestFilter {
         var tokenJWT = recuperarToken(request);
 
         if (tokenJWT != null) {
-            var subject = tokenService.getSubject(tokenJWT);
-            var usuario = repository.findById(subject).orElse(null);
-
-            if (usuario != null) {
-                var authentication = new UsernamePasswordAuthenticationToken(usuario, null, usuario.getAuthorities());
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+            try {
+                var subject = tokenService.getSubject(tokenJWT);
+                repository.findById(subject).ifPresent(usuario -> {
+                    var authentication = new UsernamePasswordAuthenticationToken(usuario, null, usuario.getAuthorities());
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                });
+            } catch (Exception e) {
+                SecurityContextHolder.clearContext();
             }
         }
         filterChain.doFilter(request, response);
     }
 
     private String recuperarToken(HttpServletRequest request) {
-        var authorizationHeader = request.getHeader("Authorization");
-        if (authorizationHeader != null) {
-            return authorizationHeader.replace("Bearer ", "");
+        var cabecalho = request.getHeader("Authorization");
+        if (cabecalho != null && cabecalho.startsWith(PREFIXO)) {
+            return cabecalho.substring(PREFIXO.length()).trim();
         }
         return null;
     }

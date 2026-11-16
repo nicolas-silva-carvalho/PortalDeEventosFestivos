@@ -1,5 +1,4 @@
 import { env } from "@/core/env";
-import { authStore } from "@/core/auth/auth-store";
 import { ApiError } from "./api-error";
 
 export interface Parser<T> {
@@ -15,7 +14,6 @@ interface RequestOptions<T> {
   body?: unknown;
   signal?: AbortSignal;
   schema?: Parser<T>;
-  auth?: boolean;
   timeoutMs?: number;
 }
 
@@ -26,7 +24,7 @@ function extrairMensagem(dados: unknown): string | null {
   }
   if (dados && typeof dados === "object") {
     const o = dados as Record<string, unknown>;
-    for (const k of ["mensagem", "message", "error", "detail"]) {
+    for (const k of ["mensagem", "message", "erro", "error", "detail"]) {
       if (typeof o[k] === "string" && o[k]) return o[k] as string;
     }
   }
@@ -42,16 +40,11 @@ export async function http<T = unknown>(
     body,
     signal,
     schema,
-    auth = false,
     timeoutMs = 20_000,
   } = opts;
 
   const headers = new Headers({ Accept: "application/json" });
   if (body !== undefined) headers.set("Content-Type", "application/json");
-  if (auth) {
-    const sessao = authStore.get();
-    if (sessao) headers.set("Authorization", `Bearer ${sessao.token}`);
-  }
 
   const timeout = AbortSignal.timeout(timeoutMs);
   const combinado = signal ? AbortSignal.any([signal, timeout]) : timeout;
@@ -63,6 +56,7 @@ export async function http<T = unknown>(
       headers,
       body: body !== undefined ? JSON.stringify(body) : undefined,
       signal: combinado,
+      credentials: "omit", // portal público: nunca envia cookies/sessão
     });
   } catch (e) {
     if (signal?.aborted) throw e;
@@ -83,7 +77,6 @@ export async function http<T = unknown>(
   }
 
   if (!res.ok) {
-    if (res.status === 401 && auth) authStore.limpar();
     throw new ApiError(
       res.status,
       extrairMensagem(dados) ?? `Erro ${res.status} ao falar com o servidor.`,

@@ -10,16 +10,9 @@ public record DadosGlobaisDTO(
         Map<String, Double> valoresPorMunicipio,
         List<RankingArtista> rankingArtistas,
         List<ContratacaoFrontDTO> rankingContratacoes,
-        List<MunicipioAgrupado> municipios,
         Filtros filtros
 ) {
     public record RankingArtista(String nome, Double valor, long ocorrencias) {}
-
-    public record MunicipioAgrupado(
-            String municipio,
-            Double totalGasto,
-            List<ContratacaoFrontDTO> contratacoes
-    ) {}
 
     public record Filtros(
             List<Integer> anos,
